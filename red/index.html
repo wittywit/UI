@@ -212,6 +212,73 @@ body::after{
 }
 .hint.gone{opacity:0;pointer-events:none}
 @keyframes hfloat{0%,100%{transform:translateX(-50%) translateY(0)}50%{transform:translateX(-50%) translateY(-5px)}}
+
+/* ═══════════════════════════════════════════════
+   TABLET  768 – 1100 px
+═══════════════════════════════════════════════ */
+@media (max-width:1100px){
+  :root{
+    --cw: 52vw;
+    --hw: calc(var(--cw) * 0.50);
+    --hand-top:   calc(5vh + var(--cw) * 0.504);
+    --hand-top-r: calc(5vh + var(--cw) * 0.504 + 7vh);
+    --hand-r: calc(50% + var(--cw) * 0.408);
+    --hand-l: calc(50% + var(--cw) * 0.400);
+  }
+  .el{font-size:9px}
+  .el.faint{display:none}
+  .vrule{display:none}
+  .corner{font-size:8px}
+  .tl,.tr{top:20px}
+  .tl{left:20px} .tr{right:20px}
+  .bl{bottom:20px;left:20px} .br{bottom:20px;right:20px}
+}
+
+/* ═══════════════════════════════════════════════
+   MOBILE  < 768 px
+   — wider card, single right hand
+═══════════════════════════════════════════════ */
+@media (max-width:767px){
+  :root{
+    --cw: 78vw;
+    --ct: 18vh;                              /* card pushed down */
+    --hw: calc(var(--cw) * 0.65);
+    --hand-top-r: calc(18vh + var(--cw) * 1);  /* hand follows card down */
+  }
+
+  /* ── single hand: hide left, push right hand down-right ── */
+  .hand-left{display:none}
+  .hand-right{
+    left:calc(50% + var(--cw) * 0.35) !important;
+  }
+
+  /* ── lean HUD — keep only brightest labels ── */
+  .el.dim,.el.faint{display:none}
+  .cross-sm,.bracket,.vrule{display:none}
+  .cross{width:20px;height:20px;opacity:.32}
+  .hrule{opacity:.14}
+  .el{font-size:8px;opacity:.5}
+  .el.bright{font-size:10px;opacity:.7}
+
+  /* hide verbose bg clusters, keep coord + dynamic */
+  #coord1,#medium1,#medium2,#dynamic{display:block}
+
+  /* ── corner chrome ── */
+  .corner{font-size:7px;opacity:.55}
+  .tl{top:16px;left:16px} .tr{top:16px;right:16px}
+  .bl{bottom:16px;left:16px} .br{bottom:16px;right:16px}
+
+  /* hide sub-line in corners to save space */
+  .corner div:nth-child(2){display:none}
+
+  /* ── card layers — bump readable sizes ── */
+  .layer{padding:8% 9%}
+  #l1 .big{font-size:clamp(28px,9vw,48px)}
+  #l2 .quote{font-size:clamp(14px,4.5vw,22px)}
+
+  /* data bars label width on narrow card */
+  .dlabel{width:36%}
+}
 </style>
 </head>
 <body>
