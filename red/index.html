@@ -1,0 +1,554 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>INEX — Living Artefact</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600&family=Space+Mono:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
+
+:root{
+  --bg:#060606;
+  --card-bg:#0c0c0c;
+  --ink:#dedad4;        /* primary text on card  */
+  --silver:#9a9a92;
+  --svk:rgba(200,195,185,0.55);   /* SVG stroke on dark card */
+  --svk-dim:rgba(200,195,185,0.28);
+
+  /* ── Geometry ──────────────────────────────────────────────────
+     --cw  : card width (one knob to resize everything)
+     --ct  : card top — move this to shift only the card
+     --ch  : card height (A4-ish ratio)
+
+     Hands are SEPARATE fixed elements, not inside the stage.
+     Their top is locked to where they looked correct when --ct was 5vh,
+     expressed in vw so they never drift regardless of viewport width.
+     --hand-top = 5vh + --ch * 0.78 = 5vh + --cw * 1.1076              */
+  --cw: 26vw;
+  --ct: 5vh;
+  --ch: calc(var(--cw) * 1.575);   /* -10% */
+
+  --hw:         calc(var(--cw) * 0.55);
+  --hand-top:   calc(5vh + var(--cw) * 0.504);
+  --hand-top-r: calc(5vh + var(--cw) * 0.504 + 7vh);  /* right hand lower */
+  --hand-r:   calc(50% + var(--cw) * 0.408);    /* left-hand right edge  */
+  --hand-l:   calc(50% + var(--cw) * 0.400);    /* right-hand left edge  */
+}
+
+html{scroll-behavior:auto}
+body{background:var(--bg);height:900vh;overflow-x:hidden;font-family:'Space Mono',monospace}
+
+/* grain */
+body::after{
+  content:'';position:fixed;inset:0;
+  background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 512 512' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.75' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='512' height='512' filter='url(%23n)' opacity='1'/%3E%3C/svg%3E");
+  background-size:256px 256px;opacity:.03;pointer-events:none;z-index:9999;mix-blend-mode:overlay;
+}
+
+/* progress */
+#progress{position:fixed;top:0;left:0;width:0%;height:1px;background:rgba(200,195,185,.25);z-index:9000;transition:width .08s linear}
+
+/* ─────────────────── HUD / BACKGROUND FIELD ─────────────────── */
+.bg{position:fixed;inset:0;pointer-events:none;z-index:5}
+.el{
+  position:absolute;
+  font-family:'Space Mono',monospace;font-size:11px;letter-spacing:.17em;
+  color:var(--silver);text-transform:uppercase;line-height:1.7;white-space:nowrap;
+  opacity:.62;transition:opacity 1.4s ease,transform 2s cubic-bezier(.25,.46,.45,.94);
+}
+.el.dim{opacity:.38}.el.faint{opacity:.22}
+.el.bright{opacity:.82;color:#c8c8bc;font-size:12px}
+
+.cross{position:absolute;width:32px;height:32px;opacity:.45}
+.cross::before,.cross::after{content:'';position:absolute;background:var(--silver)}
+.cross::before{width:1px;height:100%;left:50%;transform:translateX(-50%)}
+.cross::after{width:100%;height:1px;top:50%;transform:translateY(-50%)}
+
+.cross-sm{position:absolute;width:16px;height:16px;opacity:.32}
+.cross-sm::before,.cross-sm::after{content:'';position:absolute;background:var(--silver)}
+.cross-sm::before{width:1px;height:100%;left:50%;transform:translateX(-50%)}
+.cross-sm::after{width:100%;height:1px;top:50%;transform:translateY(-50%)}
+
+.hrule{position:absolute;height:1px;background:var(--silver);opacity:.22}
+.vrule{position:absolute;width:1px;background:var(--silver);opacity:.16}
+
+.bracket{position:absolute;opacity:.38}
+.bracket-tl::before{content:'';position:absolute;top:0;left:0;width:100%;height:1px;background:var(--silver)}
+.bracket-tl::after{content:'';position:absolute;top:0;left:0;width:1px;height:100%;background:var(--silver)}
+.bracket-tr::before{content:'';position:absolute;top:0;right:0;width:100%;height:1px;background:var(--silver)}
+.bracket-tr::after{content:'';position:absolute;top:0;right:0;width:1px;height:100%;background:var(--silver)}
+.bracket-bl::before{content:'';position:absolute;bottom:0;left:0;width:100%;height:1px;background:var(--silver)}
+.bracket-bl::after{content:'';position:absolute;bottom:0;left:0;width:1px;height:100%;background:var(--silver)}
+.bracket-br::before{content:'';position:absolute;bottom:0;right:0;width:100%;height:1px;background:var(--silver)}
+.bracket-br::after{content:'';position:absolute;bottom:0;right:0;width:1px;height:100%;background:var(--silver)}
+
+/* ─────────────────── STAGE (shared anchor for card + hands) ─────────────────── */
+/*  position:fixed; overflow:visible so hands extend outside without clipping.
+    Card fills stage absolutely. Hands are absolute within stage so they always
+    move with the card — impossible to drift at any viewport size.               */
+.stage{
+  position:fixed;
+  top:var(--ct);
+  left:50%;
+  transform:translateX(-50%);
+  width:var(--cw);
+  height:var(--ch);
+  overflow:visible;
+  z-index:20;
+}
+
+/* ─────────────────── CARD ─────────────────── */
+.card{
+  position:absolute;inset:0;
+  background:var(--card-bg);
+  border:1px solid rgba(210,205,195,0.18);
+  box-shadow:
+    0 0 0 1px rgba(210,205,195,0.06),
+    0 4px 12px rgba(0,0,0,.6),
+    0 20px 60px rgba(0,0,0,.7),
+    0 60px 140px rgba(0,0,0,.5),
+    0 0 80px rgba(200,195,185,0.04);
+  overflow:hidden;
+}
+/* subtle light-edge inner glow */
+.card::after{
+  content:'';position:absolute;inset:0;pointer-events:none;z-index:60;
+  box-shadow:inset 0 1px 0 rgba(220,215,205,0.12), inset 0 -1px 0 rgba(220,215,205,0.06);
+}
+
+/* ─────────────────── LAYERS ─────────────────── */
+.layer{
+  position:absolute;inset:0;padding:7% 8%;
+  opacity:0;transition:opacity .7s ease;
+  display:flex;flex-direction:column;pointer-events:none;
+}
+.layer.on{opacity:1;pointer-events:auto}
+
+.tag{font-size:clamp(6px,.52vw,8px);letter-spacing:.22em;color:#666;text-transform:uppercase}
+.big{font-family:'Space Grotesk',sans-serif;font-weight:300;color:var(--ink);line-height:1.03;letter-spacing:-.02em}
+.footer-tag{margin-top:auto;font-size:clamp(5px,.48vw,7px);letter-spacing:.18em;color:#555;text-transform:uppercase}
+
+/* L1 */
+#l1 .big{font-size:clamp(24px,3.8vw,60px)}
+/* L2 */
+#l2 .quote{font-family:'Space Grotesk',sans-serif;font-weight:300;font-size:clamp(12px,1.6vw,24px);color:var(--ink);line-height:1.5;letter-spacing:.02em;margin:auto 0}
+#l2 .attr{font-size:clamp(5.5px,.52vw,7.5px);letter-spacing:.2em;color:#666;margin-top:16px}
+/* L3 */
+#l3 svg{width:100%;height:100%}
+/* L4 */
+#l4{justify-content:center;align-items:center}
+#l4 svg{width:80%;height:80%}
+/* L5 */
+#l5{justify-content:center}
+.drow{display:flex;align-items:center;gap:10px;margin-bottom:14px}
+.dlabel{font-size:clamp(5.5px,.48vw,7px);letter-spacing:.14em;color:#666;text-transform:uppercase;width:30%;flex-shrink:0}
+.dtrack{flex:1;height:1px;background:rgba(200,195,185,0.15);position:relative}
+.dbar{position:absolute;left:0;top:0;height:100%;background:rgba(200,195,185,0.7);transition:width 1.6s cubic-bezier(.25,.46,.45,.94)}
+.dval{font-size:clamp(5.5px,.5vw,7.5px);color:#888;width:24px;text-align:right;flex-shrink:0}
+/* L6 */
+#l6{padding:0}
+.pbg{position:absolute;inset:0;background:radial-gradient(ellipse 70% 60% at 55% 42%,#2a1010 0%,#060606 100%)}
+.pveil{position:absolute;inset:0;z-index:3;background:linear-gradient(to bottom,rgba(6,6,6,.7) 0%,rgba(6,6,6,.1) 35%,rgba(6,6,6,.1) 65%,rgba(6,6,6,.85) 100%)}
+.pcap{position:absolute;bottom:7%;left:7%;right:7%;z-index:4;font-size:clamp(5.5px,.48vw,7px);letter-spacing:.2em;color:#c0bbb4;text-transform:uppercase;line-height:1.9}
+/* L7 */
+#l7{justify-content:center;align-items:center}
+#cube-svg{display:block;width:54%;height:auto}
+.mmeta{margin-top:16px;font-size:clamp(5.5px,.5vw,7px);letter-spacing:.18em;color:#666;text-transform:uppercase;text-align:center}
+/* L8 */
+#l8 .m-title{font-family:'Space Grotesk',sans-serif;font-size:clamp(9px,1.0vw,15px);font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:var(--ink);margin-bottom:20px;margin-top:auto}
+#l8 .m-body{font-family:'Space Grotesk',sans-serif;font-size:clamp(7px,.78vw,11px);font-weight:300;line-height:1.9;color:#b8b4ae}
+#l8 .m-end{margin-top:auto;font-size:clamp(5px,.46vw,6.5px);letter-spacing:.18em;color:#555;text-transform:uppercase;line-height:1.8}
+
+/* ─────────────────── HANDS ─────────────────── */
+/*  Hands are FIXED to the viewport — independent of the card/stage.
+    --hand-top locks them at the position they occupied when the card
+    was at --ct:5vh (the calibrated grip position). Card can now move
+    freely via --ct without touching the hands.                        */
+@keyframes breathe{0%,100%{transform:translateY(0)}50%{transform:translateY(-5px)}}
+
+.hand-left{
+  position:fixed;
+  width:var(--hw);
+  height:auto;
+  top:var(--hand-top);
+  right:var(--hand-r);
+  z-index:80;
+  pointer-events:none;
+  transform-origin:top center;
+  animation:breathe 4.5s ease-in-out infinite;
+}
+.hand-right{
+  position:fixed;
+  width:var(--hw);
+  height:auto;
+  top:var(--hand-top-r);
+  left:var(--hand-l);
+  z-index:80;
+  pointer-events:none;
+  transform-origin:top center;
+  animation:breathe 4.5s ease-in-out infinite;
+}
+.hand-left img,.hand-right img{width:100%;height:auto;display:block}
+
+/* ─────────────────── CORNER CHROME ─────────────────── */
+.corner{
+  position:fixed;z-index:100;
+  font-family:'Space Mono',monospace;font-size:9px;letter-spacing:.16em;
+  color:var(--silver);opacity:.65;text-transform:uppercase;line-height:1.9;
+}
+.tl{top:28px;left:32px}
+.tr{top:28px;right:32px;text-align:right}
+.bl{bottom:28px;left:32px}
+.br{bottom:28px;right:32px;text-align:right}
+
+/* scroll hint */
+.hint{
+  position:fixed;bottom:28px;left:50%;transform:translateX(-50%);
+  z-index:100;font-size:7px;letter-spacing:.26em;
+  color:rgba(154,154,146,.38);text-transform:uppercase;
+  animation:hfloat 2.2s ease-in-out infinite;transition:opacity 1s ease;
+}
+.hint.gone{opacity:0;pointer-events:none}
+@keyframes hfloat{0%,100%{transform:translateX(-50%) translateY(0)}50%{transform:translateX(-50%) translateY(-5px)}}
+</style>
+</head>
+<body>
+
+<div id="progress"></div>
+
+<!-- ─── BACKGROUND HUD FIELD ─── -->
+<div class="bg" id="bg">
+
+  <!-- TOP-LEFT -->
+  <div class="el bright" style="top:3.2%;left:3%">01</div>
+  <div class="cross" style="top:2.2%;left:6.4%"></div>
+  <div class="hrule" style="top:5%;left:3%;width:120px"></div>
+  <div class="el" id="coord1" style="top:6.2%;left:3%">48.8566° N / 2.3522° E</div>
+  <div class="hrule" style="top:9%;left:3%;width:88px"></div>
+  <div class="el dim" style="top:10.2%;left:3%">ARCH.REF — 2024.001</div>
+  <div class="el dim" style="top:12.8%;left:3%">SPEC-003A / 09:14:22</div>
+  <div class="bracket bracket-tl" style="top:1.8%;left:1.8%;width:26px;height:26px"></div>
+
+  <!-- LEFT VERTICAL STRIP -->
+  <div class="vrule" style="top:18%;left:2.5%;height:220px"></div>
+  <div class="el" style="top:22%;left:1.2%;writing-mode:vertical-rl;letter-spacing:.15em;font-size:9px;opacity:.32">CUMULOUS MEDIUM — SECRET — MEDUSA NINE — NOMENCLATURE NAMING APPELLATION</div>
+  <div class="cross-sm" style="top:33%;left:1.8%"></div>
+  <div class="el dim" style="top:45%;left:3%">SERIES 003</div>
+  <div class="hrule" style="top:48%;left:3%;width:66px"></div>
+  <div class="el bright" id="dynamic" style="top:50.5%;left:3%">PROD: INEX?</div>
+  <div class="el dim" style="top:54.2%;left:3%">SPEC-003C / LIGHT</div>
+  <div class="cross" style="top:58%;left:3.2%"></div>
+  <div class="hrule" style="top:61.5%;left:3%;width:96px"></div>
+  <div class="el dim" style="top:62.8%;left:3%">VOL.I FRAGMENT XII</div>
+
+  <!-- TOP-RIGHT -->
+  <div class="el dim" style="top:3%;right:3%;text-align:right">NEUTRALISING SIM SYNTAX</div>
+  <div class="hrule" style="top:5.4%;right:3%;width:140px"></div>
+  <div class="el bright" id="medium1" style="top:6.6%;right:3%;text-align:right">/MEDIUM</div>
+  <div class="cross" style="top:9.2%;right:5.4%"></div>
+  <div class="el dim" style="top:11%;right:3%;text-align:right">SPEC-003B / 2.3.14</div>
+  <div class="el dim" style="top:13.6%;right:3%;text-align:right">2024 — ARCHIVE</div>
+  <div class="bracket bracket-tr" style="top:1.8%;right:1.8%;width:26px;height:26px"></div>
+
+  <!-- RIGHT MID -->
+  <div class="vrule" style="top:28%;right:2.8%;height:200px"></div>
+  <div class="cross" style="top:35%;right:5%"></div>
+  <div class="el bright" id="medium2" style="top:39%;right:3%;text-align:right">/MEDIUM</div>
+  <div class="hrule" style="top:42.5%;right:3%;width:110px"></div>
+  <div class="el dim" id="coord2" style="top:44%;right:3%;text-align:right;line-height:1.8">TONGUEING NAMING<br>BLUNTNESS</div>
+  <div class="el bright" style="top:53%;right:3%;text-align:right">02</div>
+  <div class="hrule" style="top:56%;right:3%;width:76px"></div>
+  <div class="el dim" style="top:57.5%;right:3%;text-align:right">DESIGNATION PENDING</div>
+  <div class="cross-sm" style="top:63%;right:4.2%"></div>
+
+  <!-- GLYPHS -->
+  <div class="el" style="top:17%;left:8%;font-size:22px;opacity:.36;letter-spacing:0">✦</div>
+  <div class="el" style="top:27%;right:11%;font-size:17px;opacity:.32;letter-spacing:0">+</div>
+  <div class="el" style="bottom:23%;right:8%;font-size:22px;opacity:.3;letter-spacing:0">✦</div>
+  <div class="el" style="bottom:19%;left:10%;font-size:17px;opacity:.28;letter-spacing:0">+</div>
+  <div class="el" style="top:67%;left:6%;font-size:19px;opacity:.26;letter-spacing:0">✳</div>
+  <div class="el" style="top:11%;right:21%;font-size:16px;opacity:.24;letter-spacing:0">×</div>
+  <div class="el" style="top:40%;left:8%;font-size:15px;opacity:.2;letter-spacing:0">◇</div>
+  <div class="el" style="bottom:32%;right:12%;font-size:13px;opacity:.2;letter-spacing:0">◆</div>
+
+  <!-- BOTTOM -->
+  <div class="bracket bracket-bl" style="bottom:1.8%;left:1.8%;width:26px;height:26px"></div>
+  <div class="hrule" style="bottom:10.5%;left:3%;width:110px"></div>
+  <div class="el dim" style="bottom:12%;left:3%">SPEC-003A / 09:14:22</div>
+  <div class="el dim" style="bottom:8.5%;left:3%">SERIES 003 — INEX</div>
+  <div class="cross-sm" style="bottom:4%;left:3.2%"></div>
+  <div class="bracket bracket-br" style="bottom:1.8%;right:1.8%;width:26px;height:26px"></div>
+  <div class="hrule" style="bottom:10.5%;right:3%;width:88px"></div>
+  <div class="el dim" style="bottom:12%;right:3%;text-align:right">COORD SYS: WGS84</div>
+
+  <!-- LONG H-RULES flanking the card -->
+  <div class="hrule" style="top:28%;left:0;width:calc(50% - var(--cw)/2 - 12px);opacity:.12"></div>
+  <div class="hrule" style="top:28%;right:0;width:calc(50% - var(--cw)/2 - 12px);opacity:.12"></div>
+  <div class="hrule" style="top:72%;left:0;width:calc(50% - var(--cw)/2 - 12px);opacity:.1"></div>
+  <div class="hrule" style="top:72%;right:0;width:calc(50% - var(--cw)/2 - 12px);opacity:.1"></div>
+
+</div>
+
+<!-- ─── STAGE: card + hands share one fixed anchor ─── -->
+<div class="stage">
+
+  <!-- DARK CARD -->
+  <div class="card" id="card">
+
+    <!-- L1 : ORIGIN -->
+    <div class="layer on" id="l1">
+      <div class="tag">VOL. I — ORIGIN DOCUMENT</div>
+      <div style="flex:1;display:flex;align-items:center">
+        <div>
+          <div class="big">DARK<br>AMBIENT?</div>
+          <div style="font-size:clamp(6.5px,.6vw,9px);letter-spacing:.18em;color:#666;text-transform:uppercase;margin-top:10px;font-family:'Space Mono',monospace">A meditation on form and signal</div>
+        </div>
+      </div>
+      <div class="footer-tag">51.5074° N / 0.1278° W — ARCHIVE 001 — 2024</div>
+    </div>
+
+    <!-- L2 : STATEMENT -->
+    <div class="layer" id="l2">
+      <div class="tag" style="margin-bottom:28px">STATEMENT — 002</div>
+      <div class="quote">"The object holds<br>its shape while<br>the world moves<br>through it."</div>
+      <div class="attr">— INEX, 2024 / Fragment XII</div>
+      <div class="footer-tag">◆ &nbsp; CONTINUE DESCENDING</div>
+    </div>
+
+    <!-- L3 : STRUCTURE -->
+    <div class="layer" id="l3">
+      <svg viewBox="0 0 480 680" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <rect x="30" y="30" width="420" height="620" stroke="var(--svk-dim)" stroke-width=".5" opacity=".7"/>
+        <rect x="50" y="50" width="380" height="580" stroke="var(--svk-dim)" stroke-width=".3" opacity=".5"/>
+        <line x1="240" y1="30" x2="240" y2="650" stroke="var(--svk-dim)" stroke-width=".3" opacity=".4"/>
+        <line x1="30" y1="340" x2="450" y2="340" stroke="var(--svk-dim)" stroke-width=".3" opacity=".4"/>
+        <rect x="130" y="130" width="220" height="280" stroke="var(--svk)" stroke-width="1" opacity=".8"/>
+        <rect x="155" y="155" width="170" height="230" stroke="var(--svk)" stroke-width=".4" opacity=".4"/>
+        <circle cx="240" cy="265" r="44" stroke="var(--svk)" stroke-width=".7" opacity=".6"/>
+        <circle cx="240" cy="265" r="3" fill="var(--svk)" opacity=".7"/>
+        <line x1="240" y1="221" x2="240" y2="190" stroke="var(--svk-dim)" stroke-width=".4" opacity=".6" stroke-dasharray="2 3"/>
+        <text x="240" y="185" font-size="7" fill="#777" font-family="monospace" text-anchor="middle">VOID</text>
+        <line x1="20" y1="130" x2="20" y2="410" stroke="var(--svk-dim)" stroke-width=".5" opacity=".5"/>
+        <line x1="15" y1="130" x2="25" y2="130" stroke="var(--svk-dim)" stroke-width=".5" opacity=".5"/>
+        <line x1="15" y1="410" x2="25" y2="410" stroke="var(--svk-dim)" stroke-width=".5" opacity=".5"/>
+        <text x="12" y="275" font-size="6.5" fill="#777" font-family="monospace" text-anchor="middle" transform="rotate(-90 12 275)">280mm</text>
+        <g opacity=".25">
+          <circle cx="130" cy="470" r="1.2" fill="var(--svk)"/><circle cx="180" cy="470" r="1.2" fill="var(--svk)"/>
+          <circle cx="230" cy="470" r="1.2" fill="var(--svk)"/><circle cx="280" cy="470" r="1.2" fill="var(--svk)"/>
+          <circle cx="330" cy="470" r="1.2" fill="var(--svk)"/>
+          <circle cx="130" cy="510" r="1.2" fill="var(--svk)"/><circle cx="180" cy="510" r="1.2" fill="var(--svk)"/>
+          <circle cx="230" cy="510" r="1.2" fill="var(--svk)"/><circle cx="280" cy="510" r="1.2" fill="var(--svk)"/>
+          <circle cx="330" cy="510" r="1.2" fill="var(--svk)"/>
+        </g>
+        <path d="M42 42 L58 42 M42 42 L42 58" stroke="rgba(180,175,165,0.5)" stroke-width="1.2"/>
+        <path d="M438 42 L422 42 M438 42 L438 58" stroke="rgba(180,175,165,0.5)" stroke-width="1.2"/>
+        <path d="M42 638 L58 638 M42 638 L42 622" stroke="rgba(180,175,165,0.5)" stroke-width="1.2"/>
+        <path d="M438 638 L422 638 M438 638 L438 622" stroke="rgba(180,175,165,0.5)" stroke-width="1.2"/>
+        <text x="240" y="558" font-size="7" fill="#777" font-family="monospace" text-anchor="middle" letter-spacing="2">SECTION A — A</text>
+        <text x="240" y="571" font-size="6" fill="#666" font-family="monospace" text-anchor="middle">REF: ARCH.001 / SCALE 1:50</text>
+        <text x="240" y="660" font-size="8" fill="#777" font-family="monospace" text-anchor="middle" letter-spacing="3">INEX — VOL. III</text>
+      </svg>
+    </div>
+
+    <!-- L4 : GENERATIVE -->
+    <div class="layer" id="l4">
+      <div class="tag" style="margin-bottom:20px;text-align:center">GENERATIVE FORM — 004</div>
+      <svg viewBox="0 0 420 420" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <circle cx="210" cy="210" r="180" stroke="var(--svk-dim)" stroke-width=".4" opacity=".5"/>
+        <circle cx="210" cy="210" r="148" stroke="var(--svk-dim)" stroke-width=".4" opacity=".6"/>
+        <circle cx="210" cy="210" r="116" stroke="var(--svk)"     stroke-width=".5" opacity=".55"/>
+        <circle cx="210" cy="210" r="84"  stroke="var(--svk)"     stroke-width=".5" opacity=".65"/>
+        <circle cx="210" cy="210" r="52"  stroke="var(--svk)"     stroke-width=".6" opacity=".75"/>
+        <circle cx="210" cy="210" r="20"  stroke="var(--svk)"     stroke-width=".7" opacity=".85"/>
+        <circle cx="210" cy="210" r="4"   fill="var(--svk)"       opacity=".9"/>
+        <line x1="210" y1="26"  x2="210" y2="394" stroke="var(--svk-dim)" stroke-width=".3" opacity=".3"/>
+        <line x1="26"  y1="210" x2="394" y2="210" stroke="var(--svk-dim)" stroke-width=".3" opacity=".3"/>
+        <line x1="83"  y1="83"  x2="337" y2="337" stroke="var(--svk-dim)" stroke-width=".3" opacity=".22"/>
+        <line x1="337" y1="83"  x2="83"  y2="337" stroke="var(--svk-dim)" stroke-width=".3" opacity=".22"/>
+        <path d="M210,210 Q252,165 296,210 Q296,268 240,286 Q174,296 152,238 Q130,172 179,152 Q228,132 262,166" stroke="var(--svk)" stroke-width="1.1" opacity=".7"/>
+        <g opacity=".4">
+          <line x1="210" y1="26"  x2="210" y2="36"  stroke="var(--svk)" stroke-width="1.2"/>
+          <line x1="210" y1="384" x2="210" y2="394" stroke="var(--svk)" stroke-width="1.2"/>
+          <line x1="26"  y1="210" x2="36"  y2="210" stroke="var(--svk)" stroke-width="1.2"/>
+          <line x1="384" y1="210" x2="394" y2="210" stroke="var(--svk)" stroke-width="1.2"/>
+        </g>
+        <text x="210" y="14"  font-size="6.5" fill="#777" font-family="monospace" text-anchor="middle" letter-spacing="2">φ = 1.618033…</text>
+        <text x="210" y="412" font-size="6.5" fill="#777" font-family="monospace" text-anchor="middle" letter-spacing="2">SERIES 004 — INEX</text>
+      </svg>
+    </div>
+
+    <!-- L5 : DATA -->
+    <div class="layer" id="l5">
+      <div class="tag" style="margin-bottom:26px">DATA FIELD — 005</div>
+      <div class="drow"><span class="dlabel">FREQUENCY</span><div class="dtrack"><div class="dbar" style="width:78%"></div></div><span class="dval">78</span></div>
+      <div class="drow"><span class="dlabel">AMPLITUDE</span><div class="dtrack"><div class="dbar" style="width:45%"></div></div><span class="dval">45</span></div>
+      <div class="drow"><span class="dlabel">RESONANCE</span><div class="dtrack"><div class="dbar" style="width:91%"></div></div><span class="dval">91</span></div>
+      <div class="drow"><span class="dlabel">DENSITY</span>   <div class="dtrack"><div class="dbar" style="width:33%"></div></div><span class="dval">33</span></div>
+      <div class="drow"><span class="dlabel">DECAY</span>     <div class="dtrack"><div class="dbar" style="width:62%"></div></div><span class="dval">62</span></div>
+      <div class="drow"><span class="dlabel">VOID INDEX</span><div class="dtrack"><div class="dbar" style="width:8%" ></div></div><span class="dval">08</span></div>
+      <div class="drow"><span class="dlabel">PERSISTENCE</span><div class="dtrack"><div class="dbar" style="width:55%"></div></div><span class="dval">55</span></div>
+      <div class="footer-tag" style="margin-top:24px">MEASURED AGAINST BASELINE / SPEC-003 / 2024</div>
+    </div>
+
+    <!-- L6 : IMAGE -->
+    <div class="layer" id="l6" style="padding:0">
+      <div class="pbg"></div>
+      <svg style="position:absolute;inset:0;width:100%;height:100%;z-index:2" viewBox="0 0 100 100" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg">
+        <defs><pattern id="sc" x="0" y="0" width="100" height="3" patternUnits="userSpaceOnUse"><line x1="0" y1="0" x2="100" y2="0" stroke="rgba(200,195,185,.04)" stroke-width=".8"/></pattern></defs>
+        <rect width="100" height="100" fill="url(#sc)"/>
+        <ellipse cx="54" cy="44" rx="22" ry="30" fill="rgba(100,30,30,.4)"/>
+        <ellipse cx="54" cy="44" rx="13" ry="20" fill="rgba(60,12,12,.6)"/>
+        <circle  cx="54" cy="44" r="5"            fill="rgba(180,40,40,.35)"/>
+      </svg>
+      <div class="pveil"></div>
+      <div class="pcap">
+        UNTITLED FORM No. 6 — SILVER GELATIN SIMULATION<br>
+        <span style="opacity:.5">ARCHIVE 006 / 2024 / MEDIUM FORMAT / 120mm</span>
+      </div>
+    </div>
+
+    <!-- L7 : MODEL -->
+    <div class="layer" id="l7">
+      <div class="tag" style="text-align:center;margin-bottom:16px">OBJECT MODEL — 007</div>
+      <svg id="cube-svg" viewBox="-90 -90 180 180" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <g id="cube-g">
+          <rect x="-44" y="-44" width="88" height="88" stroke="var(--svk)" stroke-width=".9" opacity=".8"/>
+          <path d="M-44,-44 L-24,-64 L64,-64 L44,-44Z" stroke="var(--svk)" stroke-width=".7" opacity=".55"/>
+          <path d="M44,-44 L64,-64 L64,24 L44,44Z"     stroke="var(--svk)" stroke-width=".7" opacity=".45"/>
+          <line x1="-44" y1="-44" x2="-24" y2="-64"   stroke="var(--svk)" stroke-width=".5" opacity=".35"/>
+          <line x1="44"  y1="-44" x2="64"  y2="-64"   stroke="var(--svk)" stroke-width=".5" opacity=".35"/>
+          <line x1="44"  y1="44"  x2="64"  y2="24"    stroke="var(--svk)" stroke-width=".5" opacity=".35"/>
+          <line x1="-80" y1="0"   x2="80"  y2="0"     stroke="var(--svk-dim)" stroke-width=".3" opacity=".3" stroke-dasharray="2 4"/>
+          <line x1="0"   y1="-80" x2="0"   y2="80"    stroke="var(--svk-dim)" stroke-width=".3" opacity=".3" stroke-dasharray="2 4"/>
+        </g>
+      </svg>
+      <div class="mmeta">ROTATE — SCROLL TO INTERACT</div>
+      <div class="mmeta" style="margin-top:8px;opacity:.6">X: <span id="cx">0°</span> &nbsp;&nbsp; Y: <span id="cy">0°</span></div>
+    </div>
+
+    <!-- L8 : MANIFESTO -->
+    <div class="layer" id="l8">
+      <div style="flex:1"></div>
+      <div class="m-title">Manifesto</div>
+      <div class="m-body">
+        We hold the document still.<br>
+        The world moves through it.<br><br>
+        There is no homepage.<br>
+        There is no scroll.<br>
+        There is only the object—<br>
+        held, examined, released.<br><br>
+        Every surface is a different<br>
+        reading of the same truth:<br>
+        form follows intention,<br>
+        intention follows silence.<br><br>
+        This is INEX.
+      </div>
+      <div class="m-end" style="margin-top:32px">
+        END OF DOCUMENT — VOL. I<br>
+        <span style="opacity:.5">INEX — 2024 — ALL COORDINATES PRESERVED</span>
+      </div>
+    </div>
+
+  </div><!-- /card -->
+
+</div><!-- /stage -->
+
+<!-- HANDS — fixed to viewport, independent of stage/card position -->
+<div class="hand-left"><img src="left-hand.png" alt="" draggable="false"></div>
+<div class="hand-right"><img src="right-hand.png" alt="" draggable="false"></div>
+
+<!-- CORNER CHROME -->
+<div class="corner tl">
+  <div>INEX</div>
+  <div style="opacity:.5;font-size:7px">LIVING ARTEFACT INTERFACE</div>
+</div>
+<div class="corner tr">
+  <div id="sname">VOL. I — ORIGIN</div>
+  <div style="opacity:.5;font-size:7px" id="snum">001 / 008</div>
+</div>
+<div class="corner bl">
+  <div id="clive" style="font-size:7px;opacity:.6">48.8566° N / 2.3522° E</div>
+  <div style="font-size:7px;opacity:.35" id="ts">09:14:22 UTC</div>
+</div>
+<div class="corner br">
+  <div id="pct" style="font-size:7px;opacity:.5">000%</div>
+</div>
+
+<div class="hint" id="hint">scroll to examine</div>
+
+<script>
+const LAYERS = 8;
+const NAMES  = ['VOL. I — ORIGIN','VOL. II — STATEMENT','VOL. III — STRUCTURE','VOL. IV — GENERATIVE','VOL. V — DATA','VOL. VI — IMAGE','VOL. VII — MODEL','VOL. VIII — MANIFESTO'];
+const NUMS   = ['001','002','003','004','005','006','007','008'];
+const COORDS = ['48.8566° N / 2.3522° E','51.5074° N / 0.1278° W','40.7128° N / 74.0060° W','35.6762° N / 139.6503° E','55.7558° N / 37.6176° E','52.5200° N / 13.4050° E','37.7749° N / 122.4194° W','19.4326° N / 99.1332° W'];
+const DYN    = ['PROD: INEX?','STATEMENT: 002','ARCH.REF: 003','GEN.FORM: φ','DATA FIELD: 005','IMAGE NO. 6','MODEL: 007','MANIFESTO: VIII'];
+const MED    = ['/MEDIUM','/STATEMENT','/SECTION','/GENERATIVE','/MEASURE','/CAPTURE','/OBJECT','/FINAL'];
+const C2     = ['TONGUEING NAMING<br>BLUNTNESS','FORM AND SIGNAL','STRUCTURE AND VOID','SERIES 004','RESONANCE INDEX','SILVER GELATIN','WIREFRAME STUDY','END OF DOCUMENT'];
+
+const progress = document.getElementById('progress');
+const hint     = document.getElementById('hint');
+const sname    = document.getElementById('sname');
+const snum     = document.getElementById('snum');
+const clive    = document.getElementById('clive');
+const pct      = document.getElementById('pct');
+const ts       = document.getElementById('ts');
+const dynEl    = document.getElementById('dynamic');
+const med1El   = document.getElementById('medium1');
+const c1El     = document.getElementById('coord1');
+const c2El     = document.getElementById('coord2');
+const cxEl     = document.getElementById('cx');
+const cyEl     = document.getElementById('cy');
+const cubeG    = document.getElementById('cube-g');
+const layers   = document.querySelectorAll('.layer');
+
+let cur = 0, ticking = false;
+
+function getP(){
+  const max = document.body.scrollHeight - window.innerHeight;
+  return max > 0 ? window.scrollY / max : 0;
+}
+
+function update(){
+  const p   = getP();
+  const idx = Math.min(Math.floor(p * LAYERS), LAYERS - 1);
+  const lp  = (p * LAYERS) - idx;
+
+  progress.style.width = (p * 100) + '%';
+  pct.textContent = String(Math.round(p * 100)).padStart(3,'0') + '%';
+  if(p > 0.015) hint.classList.add('gone'); else hint.classList.remove('gone');
+
+  if(idx !== cur){
+    layers[cur].classList.remove('on');
+    cur = idx;
+    layers[cur].classList.add('on');
+    sname.textContent  = NAMES[idx];
+    snum.textContent   = NUMS[idx] + ' / 008';
+    clive.textContent  = COORDS[idx];
+    dynEl.textContent  = DYN[idx];
+    med1El.textContent = MED[idx];
+    c1El.textContent   = COORDS[idx];
+    c2El.innerHTML     = C2[idx];
+  }
+
+  if(idx === 6 && cubeG){
+    const ry = lp * 270;
+    const rx = Math.sin(lp * Math.PI * 2) * 18;
+    cubeG.style.transform = `rotateY(${ry}deg) rotateX(${rx}deg)`;
+    cxEl.textContent = Math.round(rx) + '°';
+    cyEl.textContent = Math.round(ry) + '°';
+  }
+
+  ts.textContent = new Date().toUTCString().slice(17,25) + ' UTC';
+  ticking = false;
+}
+
+window.addEventListener('scroll', () => {
+  if(!ticking){ requestAnimationFrame(update); ticking = true; }
+}, {passive:true});
+
+requestAnimationFrame(update);
+</script>
+</body>
+</html>
