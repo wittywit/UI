@@ -572,14 +572,88 @@ const layers   = document.querySelectorAll('.layer');
 
 let cur = 0, ticking = false;
 
+// ── scroll progress (clamped so mobile overscroll never returns negative) ──
 function getP(){
   const max = document.body.scrollHeight - window.innerHeight;
-  return max > 0 ? window.scrollY / max : 0;
+  if(max <= 0) return 0;
+  return Math.min(1, Math.max(0, window.scrollY / max));
 }
+
+// ── AUDIO ENGINE ────────────────────────────────────────────────────────────
+// Initialised lazily on first scroll (satisfies mobile autoplay policy).
+let _ctx = null;
+function ac(){
+  if(!_ctx) _ctx = new (window.AudioContext || window.webkitAudioContext)();
+  if(_ctx.state === 'suspended') _ctx.resume();
+  return _ctx;
+}
+
+// Subtle tick while scrolling — ~85 ms throttle
+let _lastTick = 0;
+function scrollBeep(){
+  const now = performance.now();
+  if(now - _lastTick < 85) return;
+  _lastTick = now;
+  try{
+    const c = ac(), t = c.currentTime;
+    const o = c.createOscillator(), g = c.createGain();
+    o.connect(g); g.connect(c.destination);
+    o.type = 'sine';
+    o.frequency.setValueAtTime(1400, t);
+    o.frequency.exponentialRampToValueAtTime(600, t + 0.05);
+    g.gain.setValueAtTime(0.018, t);
+    g.gain.exponentialRampToValueAtTime(0.0001, t + 0.07);
+    o.start(t); o.stop(t + 0.08);
+  }catch(_){}
+}
+
+// Layer-transition sci-fi sweep — each section has its own frequency signature
+const L_FREQS = [160, 200, 240, 285, 340, 400, 480, 580];
+function layerBeep(idx){
+  try{
+    const c = ac(), t = c.currentTime;
+    const f = L_FREQS[idx] || 220;
+
+    const o1 = c.createOscillator();
+    const o2 = c.createOscillator();
+    const flt = c.createBiquadFilter();
+    const mg  = c.createGain();
+
+    o1.connect(flt); o2.connect(flt);
+    flt.connect(mg); mg.connect(c.destination);
+
+    // bandpass sweeps from bright → fundamental
+    flt.type = 'bandpass';
+    flt.frequency.setValueAtTime(f * 7, t);
+    flt.frequency.exponentialRampToValueAtTime(f, t + 0.32);
+    flt.Q.setValueAtTime(4, t);
+
+    // sawtooth sweep down
+    o1.type = 'sawtooth';
+    o1.frequency.setValueAtTime(f * 2.5, t);
+    o1.frequency.exponentialRampToValueAtTime(f * 0.5, t + 0.38);
+
+    // detuned square for metallic texture
+    o2.type = 'square';
+    o2.frequency.setValueAtTime(f * 3.1, t);
+    o2.frequency.exponentialRampToValueAtTime(f * 1.1, t + 0.22);
+    o2.detune.setValueAtTime(800, t);
+    o2.detune.linearRampToValueAtTime(0, t + 0.28);
+
+    mg.gain.setValueAtTime(0, t);
+    mg.gain.linearRampToValueAtTime(0.052, t + 0.012);
+    mg.gain.exponentialRampToValueAtTime(0.0001, t + 0.48);
+
+    o1.start(t); o1.stop(t + 0.48);
+    o2.start(t); o2.stop(t + 0.48);
+  }catch(_){}
+}
+// ────────────────────────────────────────────────────────────────────────────
 
 function update(){
   const p   = getP();
-  const idx = Math.min(Math.floor(p * LAYERS), LAYERS - 1);
+  // clamp idx to [0, LAYERS-1] — prevents undefined layer on mobile overscroll
+  const idx = Math.min(Math.max(Math.floor(p * LAYERS), 0), LAYERS - 1);
   const lp  = (p * LAYERS) - idx;
 
   progress.style.width = (p * 100) + '%';
@@ -597,6 +671,7 @@ function update(){
     med1El.textContent = MED[idx];
     c1El.textContent   = COORDS[idx];
     c2El.innerHTML     = C2[idx];
+    layerBeep(idx);
   }
 
   if(idx === 6 && cubeG){
@@ -612,6 +687,7 @@ function update(){
 }
 
 window.addEventListener('scroll', () => {
+  scrollBeep();
   if(!ticking){ requestAnimationFrame(update); ticking = true; }
 }, {passive:true});
 
