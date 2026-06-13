@@ -120,46 +120,138 @@ body::after{
 
 /* ─────────────────── LAYERS ─────────────────── */
 .layer{
-  position:absolute;inset:0;padding:7% 8%;
+  position:absolute;inset:0;padding:8% 9%;
   opacity:0;transition:opacity .7s ease;
   display:flex;flex-direction:column;pointer-events:none;
+  cursor:pointer;
 }
 .layer.on{opacity:1;pointer-events:auto}
 
-.tag{font-size:clamp(6px,.52vw,8px);letter-spacing:.22em;color:#666;text-transform:uppercase}
-.big{font-family:'Space Grotesk',sans-serif;font-weight:300;color:var(--ink);line-height:1.03;letter-spacing:-.02em}
-.footer-tag{margin-top:auto;font-size:clamp(5px,.48vw,7px);letter-spacing:.18em;color:#555;text-transform:uppercase}
+.tag{font-size:clamp(10px,1vw,13px);letter-spacing:.2em;color:#666;text-transform:uppercase}
+.big{font-family:'Space Grotesk',sans-serif;font-weight:300;color:var(--ink);line-height:1.0;letter-spacing:-.02em}
+.footer-tag{margin-top:auto;font-size:clamp(9px,.8vw,11px);letter-spacing:.15em;color:#555;text-transform:uppercase}
 
 /* L1 */
-#l1 .big{font-size:clamp(24px,3.8vw,60px)}
-/* L2 */
-#l2 .quote{font-family:'Space Grotesk',sans-serif;font-weight:300;font-size:clamp(12px,1.6vw,24px);color:var(--ink);line-height:1.5;letter-spacing:.02em;margin:auto 0}
-#l2 .attr{font-size:clamp(5.5px,.52vw,7.5px);letter-spacing:.2em;color:#666;margin-top:16px}
+#l1 .big{font-size:clamp(38px,5.5vw,88px)}
+#l1 .sub{font-size:clamp(11px,1.1vw,15px);letter-spacing:.14em;color:#666;text-transform:uppercase;margin-top:14px;font-family:'Space Mono',monospace}
+
+/* L2 — auto-scrolling statement */
+#l2{overflow:hidden;padding:0}
+.scroll-mask{
+  overflow:hidden;flex:1;
+  -webkit-mask-image:linear-gradient(to bottom,transparent 0%,black 12%,black 88%,transparent 100%);
+  mask-image:linear-gradient(to bottom,transparent 0%,black 12%,black 88%,transparent 100%);
+}
+.scroll-track{
+  animation:textRise 22s linear infinite;
+  padding:18% 9% 0;
+}
+.scroll-track:hover{animation-play-state:paused}
+@keyframes textRise{0%{transform:translateY(0)}100%{transform:translateY(-50%)}}
+#l2 .ql{font-family:'Space Grotesk',sans-serif;font-weight:300;font-size:clamp(16px,2vw,28px);color:var(--ink);line-height:1.55;letter-spacing:.01em;margin-bottom:28px}
+#l2 .attr{font-size:clamp(10px,.9vw,13px);letter-spacing:.18em;color:#666;margin-bottom:48px}
+
 /* L3 */
+#l3{padding:4%}
 #l3 svg{width:100%;height:100%}
-/* L4 */
-#l4{justify-content:center;align-items:center}
-#l4 svg{width:80%;height:80%}
+
+/* L4 — animated geometry */
+#l4{justify-content:center;align-items:center;padding:6%}
+#l4 svg{width:82%;height:82%}
+@keyframes spinSlow{from{transform:rotate(0deg)}to{transform:rotate(360deg)}}
+@keyframes spinRev{from{transform:rotate(0deg)}to{transform:rotate(-360deg)}}
+@keyframes pulseFade{0%,100%{opacity:.18}50%{opacity:.55}}
+#geo-rings{transform-origin:210px 210px;animation:spinSlow 40s linear infinite}
+#geo-spiral{transform-origin:210px 210px;animation:spinRev 18s linear infinite}
+#geo-outer{animation:pulseFade 6s ease-in-out infinite}
+
 /* L5 */
 #l5{justify-content:center}
-.drow{display:flex;align-items:center;gap:10px;margin-bottom:14px}
-.dlabel{font-size:clamp(5.5px,.48vw,7px);letter-spacing:.14em;color:#666;text-transform:uppercase;width:30%;flex-shrink:0}
+.drow{display:flex;align-items:center;gap:12px;margin-bottom:18px}
+.dlabel{font-size:clamp(10px,.9vw,13px);letter-spacing:.12em;color:#666;text-transform:uppercase;width:32%;flex-shrink:0}
 .dtrack{flex:1;height:1px;background:rgba(200,195,185,0.15);position:relative}
-.dbar{position:absolute;left:0;top:0;height:100%;background:rgba(200,195,185,0.7);transition:width 1.6s cubic-bezier(.25,.46,.45,.94)}
-.dval{font-size:clamp(5.5px,.5vw,7.5px);color:#888;width:24px;text-align:right;flex-shrink:0}
+.dbar{position:absolute;left:0;top:0;height:1px;background:rgba(200,195,185,0.7);transition:width 1.6s cubic-bezier(.25,.46,.45,.94)}
+.dval{font-size:clamp(11px,1vw,14px);color:#888;width:28px;text-align:right;flex-shrink:0;font-family:'Space Mono',monospace}
+
 /* L6 */
 #l6{padding:0}
 .pbg{position:absolute;inset:0;background:radial-gradient(ellipse 70% 60% at 55% 42%,#2a1010 0%,#060606 100%)}
 .pveil{position:absolute;inset:0;z-index:3;background:linear-gradient(to bottom,rgba(6,6,6,.7) 0%,rgba(6,6,6,.1) 35%,rgba(6,6,6,.1) 65%,rgba(6,6,6,.85) 100%)}
-.pcap{position:absolute;bottom:7%;left:7%;right:7%;z-index:4;font-size:clamp(5.5px,.48vw,7px);letter-spacing:.2em;color:#c0bbb4;text-transform:uppercase;line-height:1.9}
+.pcap{position:absolute;bottom:7%;left:8%;right:8%;z-index:4;font-size:clamp(11px,1vw,14px);letter-spacing:.16em;color:#c0bbb4;text-transform:uppercase;line-height:1.8}
+
 /* L7 */
 #l7{justify-content:center;align-items:center}
-#cube-svg{display:block;width:54%;height:auto}
-.mmeta{margin-top:16px;font-size:clamp(5.5px,.5vw,7px);letter-spacing:.18em;color:#666;text-transform:uppercase;text-align:center}
-/* L8 */
-#l8 .m-title{font-family:'Space Grotesk',sans-serif;font-size:clamp(9px,1.0vw,15px);font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:var(--ink);margin-bottom:20px;margin-top:auto}
-#l8 .m-body{font-family:'Space Grotesk',sans-serif;font-size:clamp(7px,.78vw,11px);font-weight:300;line-height:1.9;color:#b8b4ae}
-#l8 .m-end{margin-top:auto;font-size:clamp(5px,.46vw,6.5px);letter-spacing:.18em;color:#555;text-transform:uppercase;line-height:1.8}
+#cube-svg{display:block;width:58%;height:auto}
+.mmeta{margin-top:18px;font-size:clamp(10px,.9vw,13px);letter-spacing:.16em;color:#666;text-transform:uppercase;text-align:center}
+
+/* L8 — auto-scrolling manifesto */
+#l8{overflow:hidden;padding:0}
+#l8 .scroll-track{padding:14% 9% 0}
+#l8 .m-title{font-family:'Space Grotesk',sans-serif;font-size:clamp(18px,2vw,28px);font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--ink);margin-bottom:28px}
+#l8 .m-body{font-family:'Space Grotesk',sans-serif;font-size:clamp(14px,1.4vw,20px);font-weight:300;line-height:2;color:#b8b4ae;margin-bottom:20px}
+#l8 .m-end{font-size:clamp(10px,.9vw,13px);letter-spacing:.16em;color:#555;text-transform:uppercase;line-height:1.8;margin-top:12px}
+
+/* ─────────────────── PROJECT OVERLAY ─────────────────── */
+.proj-overlay{
+  position:fixed;inset:0;z-index:500;
+  background:#060606;
+  display:flex;flex-direction:column;
+  opacity:0;pointer-events:none;
+  transition:opacity .5s ease;
+  overflow-y:auto;
+  font-family:'Space Mono',monospace;
+}
+.proj-overlay.open{opacity:1;pointer-events:auto}
+
+.proj-inner{
+  max-width:820px;margin:0 auto;
+  padding:80px 48px 120px;
+  color:var(--silver);
+}
+.proj-close{
+  position:fixed;top:32px;right:40px;
+  background:none;border:1px solid rgba(200,195,185,.2);
+  color:var(--silver);font-family:'Space Mono',monospace;
+  font-size:10px;letter-spacing:.2em;text-transform:uppercase;
+  padding:10px 20px;cursor:pointer;z-index:510;
+  transition:border-color .2s,color .2s;
+}
+.proj-close:hover{border-color:rgba(200,195,185,.6);color:#dedad4}
+
+.proj-kicker{font-size:10px;letter-spacing:.28em;color:#555;text-transform:uppercase;margin-bottom:32px}
+.proj-title{
+  font-family:'Space Grotesk',sans-serif;font-weight:300;
+  font-size:clamp(32px,5vw,72px);line-height:1.02;letter-spacing:-.02em;
+  color:#dedad4;margin-bottom:48px;
+}
+.proj-rule{height:1px;background:rgba(200,195,185,.15);margin:40px 0}
+.proj-section-label{font-size:10px;letter-spacing:.24em;color:#555;text-transform:uppercase;margin-bottom:16px}
+.proj-body{
+  font-family:'Space Grotesk',sans-serif;font-weight:300;
+  font-size:clamp(15px,1.4vw,20px);line-height:1.8;color:#9a9a92;
+  margin-bottom:40px;
+}
+.proj-list{list-style:none;margin-bottom:40px}
+.proj-list li{
+  font-size:clamp(12px,1.1vw,16px);letter-spacing:.08em;
+  color:#7a7a72;padding:14px 0;
+  border-bottom:1px solid rgba(200,195,185,.08);
+  display:flex;justify-content:space-between;align-items:center;
+}
+.proj-list li span{font-size:10px;letter-spacing:.2em;color:#555;text-transform:uppercase}
+.proj-tag-row{display:flex;flex-wrap:wrap;gap:10px;margin-bottom:40px}
+.proj-tag{
+  font-size:10px;letter-spacing:.18em;text-transform:uppercase;
+  border:1px solid rgba(200,195,185,.15);
+  color:#666;padding:8px 16px;
+}
+.proj-contact{
+  font-family:'Space Grotesk',sans-serif;font-size:clamp(22px,3vw,40px);
+  font-weight:300;color:#dedad4;letter-spacing:-.01em;
+  text-decoration:none;display:block;margin-top:20px;
+  transition:color .2s;
+}
+.proj-contact:hover{color:#fff}
 
 /* ─────────────────── HANDS ─────────────────── */
 /*  Hands are FIXED to the viewport — independent of the card/stage.
@@ -271,13 +363,20 @@ body::after{
   /* hide sub-line in corners to save space */
   .corner div:nth-child(2){display:none}
 
-  /* ── card layers — bump readable sizes ── */
-  .layer{padding:8% 9%}
-  #l1 .big{font-size:clamp(28px,9vw,48px)}
-  #l2 .quote{font-size:clamp(14px,4.5vw,22px)}
+  /* card layers on mobile */
+  .layer{padding:9% 10%}
+  #l1 .big{font-size:clamp(36px,10vw,56px)}
+  #l2 .ql{font-size:clamp(17px,5vw,26px)}
+  #l8 .m-title{font-size:clamp(20px,6vw,32px)}
+  #l8 .m-body{font-size:clamp(15px,4.5vw,22px)}
+  .dlabel{width:36%;font-size:clamp(10px,2.8vw,13px)}
+  .dval{font-size:clamp(12px,3vw,15px)}
+  .mmeta{font-size:clamp(11px,3vw,14px)}
+  .pcap{font-size:clamp(12px,3.2vw,16px)}
 
-  /* data bars label width on narrow card */
-  .dlabel{width:36%}
+  /* overlay on mobile */
+  .proj-inner{padding:80px 28px 100px}
+  .proj-close{top:20px;right:20px;font-size:9px;padding:8px 14px}
 }
 </style>
 </head>
@@ -370,18 +469,37 @@ body::after{
       <div style="flex:1;display:flex;align-items:center">
         <div>
           <div class="big">DARK<br>AMBIENT?</div>
-          <div style="font-size:clamp(6.5px,.6vw,9px);letter-spacing:.18em;color:#666;text-transform:uppercase;margin-top:10px;font-family:'Space Mono',monospace">A meditation on form and signal</div>
+          <div class="sub">A meditation on form and signal</div>
         </div>
       </div>
-      <div class="footer-tag">51.5074° N / 0.1278° W — ARCHIVE 001 — 2024</div>
+      <div class="footer-tag">51.5074° N / 0.1278° W — ARCHIVE 001 — 2024 &nbsp;·&nbsp; TAP TO OPEN</div>
     </div>
 
-    <!-- L2 : STATEMENT -->
+    <!-- L2 : STATEMENT (auto-scroll) -->
     <div class="layer" id="l2">
-      <div class="tag" style="margin-bottom:28px">STATEMENT — 002</div>
-      <div class="quote">"The object holds<br>its shape while<br>the world moves<br>through it."</div>
-      <div class="attr">— INEX, 2024 / Fragment XII</div>
-      <div class="footer-tag">◆ &nbsp; CONTINUE DESCENDING</div>
+      <div class="tag" style="position:absolute;top:8%;left:9%;z-index:2">STATEMENT — 002</div>
+      <div class="scroll-mask">
+        <div class="scroll-track">
+          <!-- content block × 2 for seamless loop -->
+          <div>
+            <p class="ql">"The object holds its shape<br>while the world<br>moves through it."</p>
+            <p class="attr">— INEX, 2024 / Fragment XII</p>
+            <p class="ql" style="margin-top:32px">"Every document carries<br>its own gravity.<br>The hands don't move.<br>The eye moves—<br>and behind it, the mind."</p>
+            <p class="attr">— INEX, 2024 / Fragment XVIII</p>
+            <p class="ql" style="margin-top:32px">"We are not building pages.<br>We are building<br>objects that insist<br>on being examined."</p>
+            <p class="attr" style="margin-bottom:60px">— INEX, Studio Notes 2023</p>
+          </div>
+          <!-- duplicate for loop -->
+          <div>
+            <p class="ql">"The object holds its shape<br>while the world<br>moves through it."</p>
+            <p class="attr">— INEX, 2024 / Fragment XII</p>
+            <p class="ql" style="margin-top:32px">"Every document carries<br>its own gravity.<br>The hands don't move.<br>The eye moves—<br>and behind it, the mind."</p>
+            <p class="attr">— INEX, 2024 / Fragment XVIII</p>
+            <p class="ql" style="margin-top:32px">"We are not building pages.<br>We are building<br>objects that insist<br>on being examined."</p>
+            <p class="attr" style="margin-bottom:60px">— INEX, Studio Notes 2023</p>
+          </div>
+        </div>
+      </div>
     </div>
 
     <!-- L3 : STRUCTURE -->
@@ -419,44 +537,52 @@ body::after{
       </svg>
     </div>
 
-    <!-- L4 : GENERATIVE -->
+    <!-- L4 : ANIMATED GEOMETRY -->
     <div class="layer" id="l4">
-      <div class="tag" style="margin-bottom:20px;text-align:center">GENERATIVE FORM — 004</div>
+      <div class="tag" style="text-align:center;margin-bottom:16px">GENERATIVE FORM — 004</div>
       <svg viewBox="0 0 420 420" fill="none" xmlns="http://www.w3.org/2000/svg">
-        <circle cx="210" cy="210" r="180" stroke="var(--svk-dim)" stroke-width=".4" opacity=".5"/>
-        <circle cx="210" cy="210" r="148" stroke="var(--svk-dim)" stroke-width=".4" opacity=".6"/>
-        <circle cx="210" cy="210" r="116" stroke="var(--svk)"     stroke-width=".5" opacity=".55"/>
-        <circle cx="210" cy="210" r="84"  stroke="var(--svk)"     stroke-width=".5" opacity=".65"/>
-        <circle cx="210" cy="210" r="52"  stroke="var(--svk)"     stroke-width=".6" opacity=".75"/>
-        <circle cx="210" cy="210" r="20"  stroke="var(--svk)"     stroke-width=".7" opacity=".85"/>
-        <circle cx="210" cy="210" r="4"   fill="var(--svk)"       opacity=".9"/>
-        <line x1="210" y1="26"  x2="210" y2="394" stroke="var(--svk-dim)" stroke-width=".3" opacity=".3"/>
-        <line x1="26"  y1="210" x2="394" y2="210" stroke="var(--svk-dim)" stroke-width=".3" opacity=".3"/>
-        <line x1="83"  y1="83"  x2="337" y2="337" stroke="var(--svk-dim)" stroke-width=".3" opacity=".22"/>
-        <line x1="337" y1="83"  x2="83"  y2="337" stroke="var(--svk-dim)" stroke-width=".3" opacity=".22"/>
-        <path d="M210,210 Q252,165 296,210 Q296,268 240,286 Q174,296 152,238 Q130,172 179,152 Q228,132 262,166" stroke="var(--svk)" stroke-width="1.1" opacity=".7"/>
-        <g opacity=".4">
-          <line x1="210" y1="26"  x2="210" y2="36"  stroke="var(--svk)" stroke-width="1.2"/>
-          <line x1="210" y1="384" x2="210" y2="394" stroke="var(--svk)" stroke-width="1.2"/>
-          <line x1="26"  y1="210" x2="36"  y2="210" stroke="var(--svk)" stroke-width="1.2"/>
-          <line x1="384" y1="210" x2="394" y2="210" stroke="var(--svk)" stroke-width="1.2"/>
+        <!-- outer pulsing ring -->
+        <circle id="geo-outer" cx="210" cy="210" r="190" stroke="var(--svk-dim)" stroke-width=".5"/>
+        <!-- slow-spinning concentric rings group -->
+        <g id="geo-rings">
+          <circle cx="210" cy="210" r="155" stroke="var(--svk-dim)" stroke-width=".4" opacity=".7"/>
+          <circle cx="210" cy="210" r="122" stroke="var(--svk)"     stroke-width=".6" opacity=".6"/>
+          <circle cx="210" cy="210" r="90"  stroke="var(--svk)"     stroke-width=".7" opacity=".7"/>
+          <circle cx="210" cy="210" r="58"  stroke="var(--svk)"     stroke-width=".8" opacity=".8"/>
+          <circle cx="210" cy="210" r="26"  stroke="var(--svk)"     stroke-width=".9" opacity=".9"/>
+          <!-- axis lines -->
+          <line x1="210" y1="20"  x2="210" y2="400" stroke="var(--svk-dim)" stroke-width=".3" opacity=".25"/>
+          <line x1="20"  y1="210" x2="400" y2="210" stroke="var(--svk-dim)" stroke-width=".3" opacity=".25"/>
+          <line x1="75"  y1="75"  x2="345" y2="345" stroke="var(--svk-dim)" stroke-width=".3" opacity=".18"/>
+          <line x1="345" y1="75"  x2="75"  y2="345" stroke="var(--svk-dim)" stroke-width=".3" opacity=".18"/>
+          <!-- tick marks -->
+          <line x1="210" y1="20" x2="210" y2="32" stroke="var(--svk)" stroke-width="1.2" opacity=".5"/>
+          <line x1="210" y1="388" x2="210" y2="400" stroke="var(--svk)" stroke-width="1.2" opacity=".5"/>
+          <line x1="20"  y1="210" x2="32"  y2="210" stroke="var(--svk)" stroke-width="1.2" opacity=".5"/>
+          <line x1="388" y1="210" x2="400" y2="210" stroke="var(--svk)" stroke-width="1.2" opacity=".5"/>
         </g>
-        <text x="210" y="14"  font-size="6.5" fill="#777" font-family="monospace" text-anchor="middle" letter-spacing="2">φ = 1.618033…</text>
-        <text x="210" y="412" font-size="6.5" fill="#777" font-family="monospace" text-anchor="middle" letter-spacing="2">SERIES 004 — INEX</text>
+        <!-- counter-spinning golden spiral -->
+        <g id="geo-spiral">
+          <path d="M210,210 Q252,155 306,210 Q306,278 238,300 Q158,312 132,234 Q106,148 170,124 Q240,100 282,152" stroke="var(--svk)" stroke-width="1.4" opacity=".8"/>
+        </g>
+        <!-- centre dot -->
+        <circle cx="210" cy="210" r="4" fill="var(--svk)" opacity=".95"/>
+        <text x="210" y="12"   font-size="9" fill="#666" font-family="monospace" text-anchor="middle" letter-spacing="2">φ = 1.618033…</text>
+        <text x="210" y="416"  font-size="9" fill="#666" font-family="monospace" text-anchor="middle" letter-spacing="2">SERIES 004 — INEX</text>
       </svg>
     </div>
 
     <!-- L5 : DATA -->
     <div class="layer" id="l5">
-      <div class="tag" style="margin-bottom:26px">DATA FIELD — 005</div>
+      <div class="tag" style="margin-bottom:22px">DATA FIELD — 005</div>
       <div class="drow"><span class="dlabel">FREQUENCY</span><div class="dtrack"><div class="dbar" style="width:78%"></div></div><span class="dval">78</span></div>
       <div class="drow"><span class="dlabel">AMPLITUDE</span><div class="dtrack"><div class="dbar" style="width:45%"></div></div><span class="dval">45</span></div>
       <div class="drow"><span class="dlabel">RESONANCE</span><div class="dtrack"><div class="dbar" style="width:91%"></div></div><span class="dval">91</span></div>
-      <div class="drow"><span class="dlabel">DENSITY</span>   <div class="dtrack"><div class="dbar" style="width:33%"></div></div><span class="dval">33</span></div>
-      <div class="drow"><span class="dlabel">DECAY</span>     <div class="dtrack"><div class="dbar" style="width:62%"></div></div><span class="dval">62</span></div>
-      <div class="drow"><span class="dlabel">VOID INDEX</span><div class="dtrack"><div class="dbar" style="width:8%" ></div></div><span class="dval">08</span></div>
+      <div class="drow"><span class="dlabel">DENSITY</span>  <div class="dtrack"><div class="dbar" style="width:33%"></div></div><span class="dval">33</span></div>
+      <div class="drow"><span class="dlabel">DECAY</span>    <div class="dtrack"><div class="dbar" style="width:62%"></div></div><span class="dval">62</span></div>
+      <div class="drow"><span class="dlabel">VOID INDEX</span><div class="dtrack"><div class="dbar" style="width:8%"></div></div><span class="dval">08</span></div>
       <div class="drow"><span class="dlabel">PERSISTENCE</span><div class="dtrack"><div class="dbar" style="width:55%"></div></div><span class="dval">55</span></div>
-      <div class="footer-tag" style="margin-top:24px">MEASURED AGAINST BASELINE / SPEC-003 / 2024</div>
+      <div class="footer-tag" style="margin-top:20px">MEASURED AGAINST BASELINE / SPEC-003 / 2024</div>
     </div>
 
     <!-- L6 : IMAGE -->
@@ -471,7 +597,7 @@ body::after{
       </svg>
       <div class="pveil"></div>
       <div class="pcap">
-        UNTITLED FORM No. 6 — SILVER GELATIN SIMULATION<br>
+        UNTITLED FORM No. 6<br>SILVER GELATIN SIMULATION<br>
         <span style="opacity:.5">ARCHIVE 006 / 2024 / MEDIUM FORMAT / 120mm</span>
       </div>
     </div>
@@ -495,26 +621,37 @@ body::after{
       <div class="mmeta" style="margin-top:8px;opacity:.6">X: <span id="cx">0°</span> &nbsp;&nbsp; Y: <span id="cy">0°</span></div>
     </div>
 
-    <!-- L8 : MANIFESTO -->
+    <!-- L8 : MANIFESTO (auto-scroll) -->
     <div class="layer" id="l8">
-      <div style="flex:1"></div>
-      <div class="m-title">Manifesto</div>
-      <div class="m-body">
-        We hold the document still.<br>
-        The world moves through it.<br><br>
-        There is no homepage.<br>
-        There is no scroll.<br>
-        There is only the object—<br>
-        held, examined, released.<br><br>
-        Every surface is a different<br>
-        reading of the same truth:<br>
-        form follows intention,<br>
-        intention follows silence.<br><br>
-        This is INEX.
-      </div>
-      <div class="m-end" style="margin-top:32px">
-        END OF DOCUMENT — VOL. I<br>
-        <span style="opacity:.5">INEX — 2024 — ALL COORDINATES PRESERVED</span>
+      <div class="tag" style="position:absolute;top:8%;left:9%;z-index:2">MANIFESTO — 008</div>
+      <div class="scroll-mask">
+        <div class="scroll-track" style="animation-duration:28s">
+          <div>
+            <div class="m-title">Manifesto</div>
+            <p class="m-body">We hold the document still.<br>The world moves through it.</p>
+            <p class="m-body">There is no homepage.<br>There is no scroll.<br>There is only the object—<br>held, examined, released.</p>
+            <p class="m-body">Every surface is a different<br>reading of the same truth:<br>form follows intention,<br>intention follows silence.</p>
+            <p class="m-body">The hands that hold this document<br>are not made of flesh.<br>They are made of attention.<br>And attention is the only material<br>that has ever mattered.</p>
+            <p class="m-body">This is INEX.</p>
+            <div class="m-end" style="margin-top:24px;margin-bottom:60px">
+              END OF DOCUMENT — VOL. I<br>
+              <span style="opacity:.5">INEX — 2024 — ALL COORDINATES PRESERVED</span>
+            </div>
+          </div>
+          <!-- duplicate -->
+          <div>
+            <div class="m-title">Manifesto</div>
+            <p class="m-body">We hold the document still.<br>The world moves through it.</p>
+            <p class="m-body">There is no homepage.<br>There is no scroll.<br>There is only the object—<br>held, examined, released.</p>
+            <p class="m-body">Every surface is a different<br>reading of the same truth:<br>form follows intention,<br>intention follows silence.</p>
+            <p class="m-body">The hands that hold this document<br>are not made of flesh.<br>They are made of attention.<br>And attention is the only material<br>that has ever mattered.</p>
+            <p class="m-body">This is INEX.</p>
+            <div class="m-end" style="margin-top:24px;margin-bottom:60px">
+              END OF DOCUMENT — VOL. I<br>
+              <span style="opacity:.5">INEX — 2024 — ALL COORDINATES PRESERVED</span>
+            </div>
+          </div>
+        </div>
       </div>
     </div>
 
@@ -544,6 +681,53 @@ body::after{
 </div>
 
 <div class="hint" id="hint">scroll to examine</div>
+
+<!-- PROJECT DETAILS OVERLAY -->
+<div class="proj-overlay" id="projOverlay">
+  <button class="proj-close" id="projClose">✕ &nbsp; CLOSE</button>
+  <div class="proj-inner">
+    <div class="proj-kicker">INEX — LIVING ARTEFACT INTERFACE — 2024</div>
+    <h1 class="proj-title">Dark Ambient:<br>A Studio in Permanent Beta</h1>
+
+    <div class="proj-rule"></div>
+    <div class="proj-section-label">ABOUT THE PROJECT</div>
+    <p class="proj-body">INEX is an editorial and design studio exploring the intersection of speculative technology, material culture, and the document as object. We treat every project as a living artefact—subject to revision, resistant to resolution, insisting on being examined.</p>
+    <p class="proj-body">This interface is itself the work. The hands do not move. The content does. The form is the message.</p>
+
+    <div class="proj-rule"></div>
+    <div class="proj-section-label">DISCIPLINES</div>
+    <div class="proj-tag-row">
+      <span class="proj-tag">Brand Identity</span>
+      <span class="proj-tag">Editorial Design</span>
+      <span class="proj-tag">Digital Interfaces</span>
+      <span class="proj-tag">Speculative Objects</span>
+      <span class="proj-tag">Type Design</span>
+      <span class="proj-tag">Motion</span>
+      <span class="proj-tag">Installation</span>
+    </div>
+
+    <div class="proj-rule"></div>
+    <div class="proj-section-label">SELECTED PROJECTS</div>
+    <ul class="proj-list">
+      <li>Dark Ambient Interface <span>2024</span></li>
+      <li>Cartography of the Invisible <span>2024</span></li>
+      <li>Material Studies Vol. III <span>2023</span></li>
+      <li>Nomenclature — Type Specimen <span>2023</span></li>
+      <li>The Cumulous Archive <span>2022</span></li>
+    </ul>
+
+    <div class="proj-rule"></div>
+    <div class="proj-section-label">APPROACH</div>
+    <p class="proj-body">Form follows intention. Intention follows silence. We work slowly, at museum pace, in the belief that the most durable design is the kind that refuses to explain itself.</p>
+
+    <div class="proj-rule"></div>
+    <div class="proj-section-label">CONTACT</div>
+    <a href="mailto:studio@inex.work" class="proj-contact">studio@inex.work</a>
+    <div style="margin-top:24px;font-size:10px;letter-spacing:.2em;color:#444;text-transform:uppercase">
+      COORDINATES: 51.5074° N / 0.1278° W
+    </div>
+  </div>
+</div>
 
 <script>
 const LAYERS = 8;
@@ -708,6 +892,24 @@ window.addEventListener('scroll', () => {
   scrollBeep();
   if(!ticking){ requestAnimationFrame(update); ticking = true; }
 }, {passive:true});
+
+// ── PROJECT OVERLAY ──
+const overlay   = document.getElementById('projOverlay');
+const closeBtn  = document.getElementById('projClose');
+const cardEl    = document.getElementById('card');
+
+cardEl.addEventListener('click', () => {
+  overlay.classList.add('open');
+  document.body.style.overflow = 'hidden';
+});
+closeBtn.addEventListener('click', (e) => {
+  e.stopPropagation();
+  overlay.classList.remove('open');
+  document.body.style.overflow = '';
+});
+overlay.addEventListener('click', (e) => {
+  if(e.target === overlay){ overlay.classList.remove('open'); document.body.style.overflow = ''; }
+});
 
 requestAnimationFrame(update);
 </script>
